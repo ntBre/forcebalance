@@ -979,7 +979,7 @@ class OpenMM(Engine):
                 i,
                 j,
                 k,
-                ll,
+                l,
                 1,
                 180.0 * openmm.unit.degree + val,
                 100.0 * openmm.unit.kilocalories_per_mole,
