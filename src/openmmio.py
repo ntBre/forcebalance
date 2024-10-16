@@ -53,6 +53,16 @@ except ImportError:
     # Need to have "pass" conditional if neither is installed so that non-openmm builds can parse this file
     pass
 
+from openff.toolkit import Molecule as OffMol
+import MDAnalysis as mda
+
+def get_dihedral(mol: OffMol, coords, dihedral):
+    mol = OffMol(mol)
+    mol.conformers.clear()
+    mol.add_conformer(coords)
+    u = mda.Universe(mol.to_rdkit())
+    return u.atoms[list(dihedral)].dihedral.value()
+
 def force_name(force):
     if openmm_post76:
         name = force.getName()
@@ -958,9 +968,23 @@ class OpenMM(Engine):
 
         # Freeze atoms if we have any.
         if hasattr(self, 'freeze_atoms'):
-            for i in self.freeze_atoms:
-                j = self.realAtomIdxs[i]
-                self.system.setParticleMass(j, 0.0)
+            print(f"restraining atoms: {self.freeze_atoms}")
+            print(f"len self.mol.xyzs: {len(self.mol.xyzs)}")
+            i, j, k, l = self.freeze_atoms
+            restraint = openmm.PeriodicTorsionForce()
+            mol = OffMol.from_topology(self.off_topology)
+            coords = self.pdb.positions.value_in_unit(angstrom)
+            val = get_dihedral(mol, coords, self.freeze_atoms)
+            restraint.addTorsion(
+                i,
+                j,
+                k,
+                ll,
+                1,
+                180.0 * openmm.unit.degree + val,
+                100.0 * openmm.unit.kilojoules_per_mole,
+            )
+            self.system.addForce(restraint)
 
         ## Set up for energy component analysis.
         GrpTogether = ['AmoebaGeneralizedKirkwoodForce', 'AmoebaMultipoleForce','AmoebaWcaDispersionForce', 'DrudeForce',
