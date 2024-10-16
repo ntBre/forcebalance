@@ -969,11 +969,11 @@ class OpenMM(Engine):
         # Freeze atoms if we have any.
         if hasattr(self, 'freeze_atoms'):
             print(f"restraining atoms: {self.freeze_atoms}")
-            print(f"len self.mol.xyzs: {len(self.mol.xyzs)}")
             i, j, k, l = self.freeze_atoms
             restraint = openmm.PeriodicTorsionForce()
             mol = OffMol.from_topology(self.off_topology)
             coords = self.pdb.positions.value_in_unit(angstrom)
+            coords = np.array(coords).reshape(-1, 3) * angstrom
             val = get_dihedral(mol, coords, self.freeze_atoms)
             restraint.addTorsion(
                 i,
