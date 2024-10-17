@@ -981,7 +981,7 @@ class OpenMM(Engine):
                 k,
                 l,
                 1,
-                180.0 * openmm.unit.degree + val,
+                (180.0 + val) * openmm.unit.degree,
                 100.0 * openmm.unit.kilocalories_per_mole,
             )
             self.system.addForce(restraint)
